@@ -1,1 +1,1 @@
-DONE|ls|0s|33L|SEE:result.txt
+ACK|cat :result.txt|23:52:12
