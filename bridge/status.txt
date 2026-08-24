@@ -1,1 +1,1 @@
-ACK|cat /storage/emulated/0/github/connect.sh|00:13:16
+DONE|cat /storage/emulated/0/github/connect.sh|0s|33L|SEE:result.txt
