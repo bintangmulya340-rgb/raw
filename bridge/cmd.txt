@@ -1,1 +1,1 @@
-cat :result.txt
+ls /storage/emulated/0/Alarms/base34
