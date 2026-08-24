@@ -1,1 +1,1 @@
-ACK|ls /storage/emulated/0/luafolder|00:09:46
+DONE|ls /storage/emulated/0/luafolder|0s|33L|SEE:result.txt
