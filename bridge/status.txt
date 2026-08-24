@@ -1,2 +1,1 @@
-DONE|cat :result.txt|0s|1L
-cat: ':result.txt': No such file or directory
+ACK|ls /storage/emulated/0/Alarms/base34|23:53:04
