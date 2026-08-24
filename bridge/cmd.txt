@@ -1,1 +1,1 @@
-LS21787588946|OUT=$(find /storage/emulated/0/luafolder -maxdepth 3 | sort | head -200); echo "$OUT"
+RD1787589009|cat /storage/emulated/0/luafolder/FULL_ROADMAP_OWN_EXEC.md
