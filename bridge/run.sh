@@ -1,8 +1,8 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 # ─────────────────────────────────────────
-#  BRIDGE CLIENT v2.0 - Termux Side
-#  Claude → GitHub → Termux
+#  BRIDGE CLIENT v3.0 - Termux Side
+#  Fix: large output via result.txt, no arg-too-long
 # ─────────────────────────────────────────
 
 TOKEN=$(cat ~/.bridge_token)
@@ -10,8 +10,30 @@ USER="bintangmulya340-rgb"
 REPO="raw"
 API="https://api.github.com/repos/$USER/$REPO/contents/bridge"
 LAST_CMD_ID=""
+TMP_OUT="/data/data/com.termux/files/home/.bridge_out.txt"
+TMP_ENC="/data/data/com.termux/files/home/.bridge_enc.txt"
+TMP_PY="/data/data/com.termux/files/home/.bridge_mkpayload.py"
 
 log() { echo "[$(date '+%H:%M:%S')] $1"; }
+
+# Tulis helper python sekali
+cat > "$TMP_PY" << 'PYEOF'
+import sys, json, base64
+
+remote = sys.argv[1]
+sha    = sys.argv[2]
+msg    = sys.argv[3]
+srcf   = sys.argv[4]
+
+with open(srcf, 'rb') as f:
+    content = base64.b64encode(f.read()).decode()
+
+payload = {"message": msg, "content": content}
+if sha:
+    payload["sha"] = sha
+
+print(json.dumps(payload))
+PYEOF
 
 gh_read() {
   curl -s -H "Authorization: Bearer $TOKEN" \
@@ -20,33 +42,42 @@ gh_read() {
 import sys,json,base64
 try:
   r=json.load(sys.stdin)
-  print(base64.b64decode(r[\"content\"]).decode().strip())
+  print(base64.b64decode(r['content']).decode().strip())
 except:
-  print(\"ERROR\")
+  print('ERROR')
 "
 }
 
-gh_write() {
-  local FILE=$1
-  local CONTENT=$2
-  local MSG=$3
-  SHA=$(curl -s -H "Authorization: Bearer $TOKEN" \
-    "$API/$FILE" | python3 -c "import sys,json; print(json.load(sys.stdin).get(\"sha\",\"\"))" 2>/dev/null)
-  ENCODED=$(printf "%s" "$CONTENT" | base64 | tr -d "\n")
-  if [ -n "$SHA" ]; then
-    curl -s -X PUT "$API/$FILE" \
-      -H "Authorization: Bearer $TOKEN" \
-      -H "Content-Type: application/json" \
-      -d "{\"message\":\"$MSG\",\"sha\":\"$SHA\",\"content\":\"$ENCODED\"}" > /dev/null
-  else
-    curl -s -X PUT "$API/$FILE" \
-      -H "Authorization: Bearer $TOKEN" \
-      -H "Content-Type: application/json" \
-      -d "{\"message\":\"$MSG\",\"content\":\"$ENCODED\"}" > /dev/null
-  fi
+gh_get_sha() {
+  curl -s -H "Authorization: Bearer $TOKEN" "$API/$1" | \
+    python3 -c "
+import sys,json
+try: print(json.load(sys.stdin).get('sha',''))
+except: print('')
+"
 }
 
-log "Bridge v2.0 started"
+gh_write_file() {
+  local REMOTE=$1
+  local SRCFILE=$2
+  local MSG=$3
+  local SHA=$(gh_get_sha "$REMOTE")
+  python3 "$TMP_PY" "$REMOTE" "$SHA" "$MSG" "$SRCFILE" | \
+    curl -s -X PUT "$API/$REMOTE" \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d @- > /dev/null
+}
+
+gh_write() {
+  local REMOTE=$1
+  local CONTENT=$2
+  local MSG=$3
+  printf "%s" "$CONTENT" > "$TMP_OUT"
+  gh_write_file "$REMOTE" "$TMP_OUT" "$MSG"
+}
+
+log "Bridge v3.0 started"
 gh_write "status.txt" "ONLINE|$(date '+%Y-%m-%d %H:%M:%S')|$(whoami)@$(hostname)" "bridge: online"
 log "ONLINE dikirim ke GitHub"
 
@@ -55,7 +86,11 @@ while true; do
   CMD_ID=$(echo "$RAW" | cut -d'|' -f1)
   CMD=$(echo "$RAW" | cut -d'|' -f2-)
 
-  if [ "$CMD_ID" != "$LAST_CMD_ID" ] && [ "$CMD_ID" != "READY" ] && [ -n "$CMD_ID" ] && [ "$CMD_ID" != "ERROR" ]; then
+  if [ "$CMD_ID" != "$LAST_CMD_ID" ] && \
+     [ "$CMD_ID" != "READY" ] && \
+     [ -n "$CMD_ID" ] && \
+     [ "$CMD_ID" != "ERROR" ]; then
+
     log "CMD [$CMD_ID]: $CMD"
     LAST_CMD_ID="$CMD_ID"
 
@@ -63,14 +98,25 @@ while true; do
     log "ACK terkirim"
 
     START=$(date +%s)
-    OUTPUT=$(eval "$CMD" 2>&1)
+    eval "$CMD" > "$TMP_OUT" 2>&1
     END=$(date +%s)
     ELAPSED=$((END-START))
 
-    RESULT="DONE|$CMD_ID|${ELAPSED}s|$(date '+%H:%M:%S')
+    LINES=$(wc -l < "$TMP_OUT")
+    SIZE=$(wc -c < "$TMP_OUT")
+    log "Output: ${LINES} lines, ${SIZE} bytes"
+
+    if [ "$SIZE" -le 3000 ]; then
+      OUTPUT=$(cat "$TMP_OUT")
+      RESULT="DONE|$CMD_ID|${ELAPSED}s|${LINES}L
 $OUTPUT"
-    gh_write "status.txt" "$RESULT" "output: $CMD_ID"
-    log "Output uploaded (${ELAPSED}s)"
+      gh_write "status.txt" "$RESULT" "output: $CMD_ID"
+      log "Output → status.txt (${ELAPSED}s)"
+    else
+      gh_write_file "result.txt" "$TMP_OUT" "result: $CMD_ID"
+      gh_write "status.txt" "DONE|$CMD_ID|${ELAPSED}s|${LINES}L|SEE:result.txt" "done: $CMD_ID"
+      log "Output besar → result.txt (${ELAPSED}s)"
+    fi
   fi
 
   sleep 5
