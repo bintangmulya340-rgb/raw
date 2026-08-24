@@ -1,1 +1,1 @@
-echo "BRIDGE OK - $(date) - $(whoami)@$(hostname)"
+TST1787588750|echo "BRIDGE OK - $(date) - $(whoami)@$(hostname)"
