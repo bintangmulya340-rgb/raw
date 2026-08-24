@@ -1,1 +1,1 @@
-LS1787588818|find /storage/emulated/0/luafolder -maxdepth 3 | sort
+LS21787588946|OUT=$(find /storage/emulated/0/luafolder -maxdepth 3 | sort | head -200); echo "$OUT"
