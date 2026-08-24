@@ -1,1 +1,1 @@
-UPD1787589202|curl -s -H "Authorization: Bearer $(cat ~/.bridge_token)" "https://raw.githubusercontent.com/bintangmulya340-rgb/raw/main/bridge/run.sh" -o /storage/emulated/0/github/connect.sh && chmod +x /storage/emulated/0/github/connect.sh && echo "UPDATE OK" && head -3 /storage/emulated/0/github/connect.sh
+RST1787589219|pkill -f connect.sh 2>/dev/null; sleep 1; nohup bash /storage/emulated/0/github/connect.sh > /storage/emulated/0/github/bridge.log 2>&1 & echo "RESTARTED PID=$!"
