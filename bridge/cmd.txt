@@ -1,1 +1,1 @@
-cat /storage/emulated/0/github/connect.sh
+ls1787591925|find /storage/emulated/0/luafolder -maxdepth 3 2>/dev/null | head -80 && echo '---' && ls -la /storage/emulated/0/luafolder/ 2>/dev/null
