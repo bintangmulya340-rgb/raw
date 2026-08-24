@@ -1,1 +1,1 @@
-TST1787588750|echo "BRIDGE OK - $(date) - $(whoami)@$(hostname)"
+LS1787588818|find /storage/emulated/0/luafolder -maxdepth 3 | sort
