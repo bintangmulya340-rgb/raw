@@ -1,13 +1,1 @@
-UP1787589090|python3 -c "
-import base64,json,subprocess,urllib.request,os
-f=open(\"/storage/emulated/0/luafolder/FULL_ROADMAP_OWN_EXEC.md\",\"rb\").read()
-enc=base64.b64encode(f).decode()
-tok=open(os.path.expanduser(\"~/.bridge_token\")).read().strip()
-repo=\"https://api.github.com/repos/bintangmulya340-rgb/raw/contents/bridge/out.b64\"
-sha_r=urllib.request.urlopen(urllib.request.Request(repo,headers={\"Authorization\":\"Bearer \"+tok}))
-sha=json.loads(sha_r.read()).get(\"sha\",\"\")
-body=json.dumps({\"message\":\"upload out\",\"sha\":sha,\"content\":enc}).encode()
-req=urllib.request.Request(repo,data=body,method=\"PUT\",headers={\"Authorization\":\"Bearer \"+tok,\"Content-Type\":\"application/json\"})
-urllib.request.urlopen(req)
-print(\"UPLOAD_OK\")
-"
+UPD1787589202|curl -s -H "Authorization: Bearer $(cat ~/.bridge_token)" "https://raw.githubusercontent.com/bintangmulya340-rgb/raw/main/bridge/run.sh" -o /storage/emulated/0/github/connect.sh && chmod +x /storage/emulated/0/github/connect.sh && echo "UPDATE OK" && head -3 /storage/emulated/0/github/connect.sh
