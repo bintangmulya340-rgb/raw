@@ -1,1 +1,1 @@
-echo "BRIDGE OK - $(date) - $(whoami)@$(hostname)"
+READY
